@@ -1,6 +1,6 @@
 const needle = require('needle')
 const cheerio = require('cheerio')
-const https = require('node:https'); // or 'https' for https:// URLs
+// const https = require('node:https'); // or 'https' for https:// URLs
 const fs = require("fs");
 const tesseract = require("node-tesseract-ocr")
 
@@ -29,23 +29,21 @@ async function downloadCaptchaImg(url) {
   })
 }
 
-async function main() {
-  const url = await getUrlCaptcha();
-  await downloadCaptchaImg(url);
-  const img = fs.readFileSync(`${__dirname}/captcha/captcha.jpg`)
-  const config = {
-    lang: "eng",
-    oem: 1,
-    psm: 3,
-  }
+async function recognizeCaptcha(buffer) {
+  return new Promise((resolve, reject) => {
+    tesseract
+      .recognize(buffer)
+      .then((text) => resolve(text))
+      .catch((error) => reject(error.message))
+  })
+}
 
-  tesseract
-    .recognize(img, config)
-    .then((text) => {
-      console.log("Result:", text)
-    })
-    .catch((error) => {
-      console.log(error.message)
-    })
+async function main() {
+  // const url = await getUrlCaptcha();
+  // await downloadCaptchaImg(url);
+
+  const imgBuffer = fs.readFileSync(`${__dirname}/captcha/captcha.jpg`);
+  const text = await recognizeCaptcha(imgBuffer)
+  console.log(text)
 }  
 main();
